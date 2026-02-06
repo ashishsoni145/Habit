@@ -1,38 +1,95 @@
+// =======================
+// GLOBAL VARIABLES
+// =======================
+
 let habits = [];
 let userId = null;
 
-let pieChart, lineChart;
+// =======================
+// AUTH CHECK
+// =======================
 
-auth.onAuthStateChanged(user=>{
-if(!user){
-window.location="index.html";
+auth.onAuthStateChanged(user => {
+
+if (!user) {
+window.location = "index.html";
 return;
 }
 
-userId=user.uid;
+userId = user.uid;
 loadHabits();
 
 });
 
+// =======================
+// ADD HABIT
+// =======================
+
 function addHabit(){
 
-let name=document.getElementById("habitInput").value.trim();
+let input = document.getElementById("habitInput");
+let name = input.value.trim();
+
 if(!name) return;
 
 habits.push({
-name:name,
-days:Array(30).fill(false)
+name: name,
+days: Array(30).fill(false)
 });
 
 saveHabits();
 render();
 
-document.getElementById("habitInput").value="";
+input.value="";
+
 }
 
-function toggleDay(habitIndex,dayIndex){
+// =======================
+// RENDER HABITS (NOTION GRID)
+// =======================
 
-habits[habitIndex].days[dayIndex]=
+function render(){
+
+let list = document.getElementById("habitList");
+list.innerHTML="";
+
+habits.forEach((h,i)=>{
+
+let habitHTML = `
+<div class="habit">
+<strong>${h.name}</strong>
+<div>
+`;
+
+let daysHTML = "";
+
+h.days.forEach((d,di)=>{
+daysHTML += `
+<span 
+class="${d ? 'active' : ''}" 
+onclick="toggleDay(${i},${di})">
+</span>
+`;
+});
+
+habitHTML += daysHTML + "</div></div>";
+
+list.innerHTML += habitHTML;
+
+});
+
+updateStats();
+drawCharts();
+
+}
+
+// =======================
+// TOGGLE DAY
+// =======================
+
+function toggleDay(habitIndex, dayIndex){
+
+habits[habitIndex].days[dayIndex] =
 !habits[habitIndex].days[dayIndex];
 
 saveHabits();
@@ -40,86 +97,115 @@ render();
 
 }
 
-function render(){
+// =======================
+// FIREBASE SAVE
+// =======================
 
-let list=document.getElementById("habitList");
-list.innerHTML="";
+function saveHabits(){
 
-habits.forEach((h,i)=>{
-
-let div=document.createElement("div");
-div.className="habit";
-
-let daysHTML="";
-
-h.days.forEach((d,di)=>{
-daysHTML+=`
-<span onclick="toggleDay(${i},${di})"
-style="
-display:inline-block;
-width:16px;
-height:16px;
-margin:2px;
-border-radius:4px;
-background:${d?"#22c55e":"#e5e7eb"};
-cursor:pointer;
-"></span>
-`;
-});
-
-div.innerHTML=`
-<div>
-<strong>${h.name}</strong>
-<div>${daysHTML}</div>
-</div>
-`;
-
-list.appendChild(div);
-
-});
-
-updateStats();
+db.collection("habits")
+.doc(userId)
+.set({ habits });
 
 }
+
+// =======================
+// FIREBASE LOAD
+// =======================
+
+function loadHabits(){
+
+db.collection("habits")
+.doc(userId)
+.get()
+.then(doc => {
+
+if(doc.exists){
+habits = doc.data().habits || [];
+render();
+}
+
+});
+
+}
+
+// =======================
+// STATS UPDATE
+// =======================
 
 function updateStats(){
 
-let total=habits.length;
-let totalDays=0;
-let completed=0;
+let totalHabitsEl = document.getElementById("totalHabits");
+let completionEl = document.getElementById("completionPercent");
+
+if(!totalHabitsEl || !completionEl) return;
+
+let total = habits.length;
+let done = 0;
+let all = 0;
 
 habits.forEach(h=>{
 h.days.forEach(d=>{
-totalDays++;
-if(d) completed++;
+all++;
+if(d) done++;
 });
 });
 
-let percent= totalDays? Math.round(completed/totalDays*100):0;
+let percent = all ? Math.round(done / all * 100) : 0;
 
-document.getElementById("totalHabits").innerText=total;
-document.getElementById("completionPercent").innerText=percent+"%";
-
-drawCharts(completed,totalDays);
+totalHabitsEl.innerText = total;
+completionEl.innerText = percent + "%";
 
 }
 
-function drawCharts(done,total){
+// =======================
+// CHARTS
+// =======================
+
+let pieChart = null;
+let lineChart = null;
+
+function drawCharts(){
+
+if(typeof Chart === "undefined") return;
+
+let done = 0;
+let total = 0;
+
+habits.forEach(h=>{
+h.days.forEach(d=>{
+total++;
+if(d) done++;
+});
+});
+
+let remaining = total - done;
+
+// PIE CHART
+let pieCtx = document.getElementById("pieChart");
+if(pieCtx){
 
 if(pieChart) pieChart.destroy();
-if(lineChart) lineChart.destroy();
 
-pieChart=new Chart(document.getElementById("pieChart"),{
+pieChart = new Chart(pieCtx,{
 type:"pie",
 data:{
 labels:["Done","Remaining"],
 datasets:[{
-data:[done,total-done]
+data:[done, remaining],
+backgroundColor:["#22c55e","#e5e7eb"]
 }]
 }
 });
+}
 
-lineChart=new Chart(document.getElementById("lineChart"),{
+// LINE CHART
+let lineCtx = document.getElementById("lineChart");
+if(lineCtx){
+
+if(lineChart) lineChart.destroy();
+
+lineChart = new Chart(lineCtx,{
 type:"line",
 data:{
 labels:["Week1","Week2","Week3","Week4"],
@@ -130,25 +216,19 @@ Math.random()*100,
 Math.random()*100,
 Math.random()*100,
 Math.random()*100
-]
+],
+borderColor:"#22c55e",
+fill:false
 }]
 }
 });
-
 }
 
-function saveHabits(){
-db.collection("habits").doc(userId).set({habits});
 }
 
-function loadHabits(){
-db.collection("habits").doc(userId).get().then(doc=>{
-if(doc.exists){
-habits=doc.data().habits||[];
-render();
-}
-});
-}
+// =======================
+// LOGOUT
+// =======================
 
 function logout(){
 auth.signOut();
