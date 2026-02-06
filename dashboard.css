@@ -95,3 +95,7 @@ background:#ebebeb;
 .habit span.active{
 background:#22c55e;
 }
+.future{
+opacity:0.3;
+pointer-events:none;
+}
