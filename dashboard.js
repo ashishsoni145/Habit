@@ -1,13 +1,14 @@
-// =======================
-// GLOBAL VARIABLES
-// =======================
+// ================= GLOBAL =================
 
 let habits = [];
 let userId = null;
 
-// =======================
-// AUTH CHECK
-// =======================
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+
+const DAYS_IN_VIEW = 31;
+
+// ================= AUTH =================
 
 auth.onAuthStateChanged(user => {
 
@@ -21,9 +22,19 @@ loadHabits();
 
 });
 
-// =======================
-// ADD HABIT
-// =======================
+// ================= DATE HELPERS =================
+
+function getDaysInMonth(month, year){
+return new Date(year, month + 1, 0).getDate();
+}
+
+function getTodayIndex(){
+let today = new Date();
+if(today.getMonth() !== currentMonth) return -1;
+return today.getDate() - 1;
+}
+
+// ================= ADD HABIT =================
 
 function addHabit(){
 
@@ -32,9 +43,13 @@ let name = input.value.trim();
 
 if(!name) return;
 
+let daysCount = getDaysInMonth(currentMonth,currentYear);
+
 habits.push({
-name: name,
-days: Array(30).fill(false)
+name:name,
+days:Array(daysCount).fill(false),
+streak:0,
+bestStreak:0
 });
 
 saveHabits();
@@ -44,50 +59,68 @@ input.value="";
 
 }
 
-// =======================
-// RENDER HABITS (NOTION GRID)
-// =======================
+// ================= RENDER =================
 
 function render(){
 
-let list = document.getElementById("habitList");
+let list=document.getElementById("habitList");
 list.innerHTML="";
+
+let todayIndex = getTodayIndex();
 
 habits.forEach((h,i)=>{
 
-let habitHTML = `
-<div class="habit">
-<strong>${h.name}</strong>
-<div>
-`;
+let row=document.createElement("div");
+row.className="habitRow";
 
-let daysHTML = "";
+// NAME
+let name=document.createElement("div");
+name.className="habitName";
+name.innerText=h.name;
+
+// TICKS
+let ticks=document.createElement("div");
+ticks.className="ticksRow";
 
 h.days.forEach((d,di)=>{
-daysHTML += `
-<span 
-class="${d ? 'active' : ''}" 
-onclick="toggleDay(${i},${di})">
-</span>
-`;
+
+let tick=document.createElement("span");
+
+tick.className="tick";
+
+if(d) tick.classList.add("active");
+if(di===todayIndex) tick.classList.add("today");
+
+if(di>todayIndex && todayIndex!==-1){
+tick.classList.add("future");
+}
+
+tick.onclick=()=>{
+if(di<=todayIndex || todayIndex===-1){
+toggleDay(i,di);
+}
+};
+
+ticks.appendChild(tick);
+
 });
 
-habitHTML += daysHTML + "</div></div>";
+row.appendChild(name);
+row.appendChild(ticks);
 
-list.innerHTML += habitHTML;
+list.appendChild(row);
 
 });
 
 updateStats();
+updateStreaks();
 drawCharts();
 
 }
 
-// =======================
-// TOGGLE DAY
-// =======================
+// ================= TOGGLE =================
 
-function toggleDay(habitIndex, dayIndex){
+function toggleDay(habitIndex,dayIndex){
 
 habits[habitIndex].days[dayIndex] =
 !habits[habitIndex].days[dayIndex];
@@ -97,52 +130,77 @@ render();
 
 }
 
-// =======================
-// FIREBASE SAVE
-// =======================
+// ================= STREAK SYSTEM =================
+
+function updateStreaks(){
+
+habits.forEach(h=>{
+
+let streak=0;
+let best=0;
+
+h.days.forEach(d=>{
+if(d){
+streak++;
+best=Math.max(best,streak);
+}else{
+streak=0;
+}
+});
+
+h.streak=streak;
+h.bestStreak=best;
+
+});
+
+}
+
+// ================= FIREBASE =================
 
 function saveHabits(){
 
 db.collection("habits")
 .doc(userId)
-.set({ habits });
+.set({
+habits,
+month:currentMonth,
+year:currentYear
+});
 
 }
-
-// =======================
-// FIREBASE LOAD
-// =======================
 
 function loadHabits(){
 
 db.collection("habits")
 .doc(userId)
 .get()
-.then(doc => {
+.then(doc=>{
 
 if(doc.exists){
-habits = doc.data().habits || [];
-render();
+let data=doc.data();
+habits=data.habits || [];
+currentMonth=data.month ?? currentMonth;
+currentYear=data.year ?? currentYear;
 }
+
+render();
 
 });
 
 }
 
-// =======================
-// STATS UPDATE
-// =======================
+// ================= STATS =================
 
 function updateStats(){
 
-let totalHabitsEl = document.getElementById("totalHabits");
-let completionEl = document.getElementById("completionPercent");
+let totalEl=document.getElementById("totalHabits");
+let percentEl=document.getElementById("completionPercent");
 
-if(!totalHabitsEl || !completionEl) return;
+if(!totalEl) return;
 
-let total = habits.length;
-let done = 0;
-let all = 0;
+let total=habits.length;
+let done=0;
+let all=0;
 
 habits.forEach(h=>{
 h.days.forEach(d=>{
@@ -151,26 +209,24 @@ if(d) done++;
 });
 });
 
-let percent = all ? Math.round(done / all * 100) : 0;
+let percent=all?Math.round(done/all*100):0;
 
-totalHabitsEl.innerText = total;
-completionEl.innerText = percent + "%";
+totalEl.innerText=total;
+percentEl.innerText=percent+"%";
 
 }
 
-// =======================
-// CHARTS
-// =======================
+// ================= CHARTS =================
 
-let pieChart = null;
-let lineChart = null;
+let pieChart=null;
+let lineChart=null;
 
 function drawCharts(){
 
-if(typeof Chart === "undefined") return;
+if(typeof Chart==="undefined") return;
 
-let done = 0;
-let total = 0;
+let done=0;
+let total=0;
 
 habits.forEach(h=>{
 h.days.forEach(d=>{
@@ -179,56 +235,83 @@ if(d) done++;
 });
 });
 
-let remaining = total - done;
+let remain=total-done;
 
-// PIE CHART
-let pieCtx = document.getElementById("pieChart");
-if(pieCtx){
+// PIE
+let pie=document.getElementById("pieChart");
+if(pie){
 
 if(pieChart) pieChart.destroy();
 
-pieChart = new Chart(pieCtx,{
+pieChart=new Chart(pie,{
 type:"pie",
 data:{
 labels:["Done","Remaining"],
 datasets:[{
-data:[done, remaining],
+data:[done,remain],
 backgroundColor:["#22c55e","#e5e7eb"]
 }]
 }
 });
+
 }
 
-// LINE CHART
-let lineCtx = document.getElementById("lineChart");
-if(lineCtx){
+// LINE WEEK TREND
+let line=document.getElementById("lineChart");
+if(line){
 
 if(lineChart) lineChart.destroy();
 
-lineChart = new Chart(lineCtx,{
+let weekly=[0,0,0,0];
+
+habits.forEach(h=>{
+h.days.forEach((d,i)=>{
+if(d){
+weekly[Math.floor(i/7)]++;
+}
+});
+});
+
+lineChart=new Chart(line,{
 type:"line",
 data:{
-labels:["Week1","Week2","Week3","Week4"],
+labels:["W1","W2","W3","W4"],
 datasets:[{
-label:"Progress",
-data:[
-Math.random()*100,
-Math.random()*100,
-Math.random()*100,
-Math.random()*100
-],
+label:"Completion",
+data:weekly,
 borderColor:"#22c55e",
 fill:false
 }]
 }
 });
-}
 
 }
 
-// =======================
-// LOGOUT
-// =======================
+}
+
+// ================= MONTH SWITCH =================
+
+function nextMonth(){
+currentMonth++;
+if(currentMonth>11){
+currentMonth=0;
+currentYear++;
+}
+saveHabits();
+render();
+}
+
+function prevMonth(){
+currentMonth--;
+if(currentMonth<0){
+currentMonth=11;
+currentYear--;
+}
+saveHabits();
+render();
+}
+
+// ================= LOGOUT =================
 
 function logout(){
 auth.signOut();
