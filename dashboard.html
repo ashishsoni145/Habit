@@ -12,37 +12,33 @@
 
 <body>
 
-<h1>Habit Dashboard</h1>
+<h1 class="title">Habit Tracker</h1>
 
-<div class="top-bar">
+<div class="topbar">
 <input id="habitInput" placeholder="New Habit">
-<button onclick="addHabit()">Add Habit</button>
-<button onclick="logout()">Logout</button>
+<button onclick="addHabit()">Add</button>
+<button class="ghost" onclick="logout()">Logout</button>
 </div>
 
-<div class="layout">
+<div class="main">
 
-<!-- LEFT HABITS -->
-<div class="habits-panel">
+<div class="left">
 <h3>Your Habits</h3>
 <div id="habitList"></div>
 </div>
 
-<!-- RIGHT STATS -->
-<div class="stats-panel">
+<div class="right">
 
-<div class="stats-row">
-
-<div class="card">
-<h4>Total Habits</h4>
-<p id="totalHabits">0</p>
+<div class="stats">
+<div>
+<span>Total</span>
+<h2 id="totalHabits">0</h2>
 </div>
 
-<div class="card">
-<h4>Completion %</h4>
-<p id="completionPercent">0%</p>
+<div>
+<span>Completion</span>
+<h2 id="completionPercent">0%</h2>
 </div>
-
 </div>
 
 <canvas id="pieChart"></canvas>
@@ -50,9 +46,7 @@
 
 </div>
 
-</div>
-
-<!-- Firebase -->
+</div><!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
