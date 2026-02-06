@@ -1,0 +1,59 @@
+body {
+    font-family: Segoe UI;
+    background: #f5f7fb;
+    padding: 20px;
+}
+
+.top-bar {
+    margin-bottom: 20px;
+}
+
+.layout {
+    display: flex;
+    gap: 20px;
+}
+
+.habits-panel {
+    flex: 1;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.stats-panel {
+    flex: 2;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.card {
+    background: #eef2ff;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.stats-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.habit {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    margin: 6px 0;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+button {
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #6366f1;
+    color: white;
+    cursor: pointer;
+}

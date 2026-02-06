@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Habit Dashboard</title>
+
+<link rel="stylesheet" href="dashboard.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+<h1>Habit Dashboard</h1>
+
+<div class="top-bar">
+<input id="habitInput" placeholder="New Habit">
+<button onclick="addHabit()">Add Habit</button>
+<button onclick="logout()">Logout</button>
+</div>
+
+<div class="layout">
+
+<!-- LEFT HABITS -->
+<div class="habits-panel">
+<h3>Your Habits</h3>
+<div id="habitList"></div>
+</div>
+
+<!-- RIGHT STATS -->
+<div class="stats-panel">
+
+<div class="stats-row">
+
+<div class="card">
+<h4>Total Habits</h4>
+<p id="totalHabits">0</p>
+</div>
+
+<div class="card">
+<h4>Completion %</h4>
+<p id="completionPercent">0%</p>
+</div>
+
+</div>
+
+<canvas id="pieChart"></canvas>
+<canvas id="lineChart"></canvas>
+
+</div>
+
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script src="firebase.js"></script>
+<script src="dashboard.js"></script>
+
+</body>
+</html>
