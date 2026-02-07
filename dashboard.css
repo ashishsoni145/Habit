@@ -154,7 +154,6 @@ font-size:14px;
 
 #dateHeader{
 display:grid;
-grid-template-columns:repeat(31, 22px);
 gap:6px;
 margin-left:120px;
 margin-bottom:12px;
@@ -164,7 +163,6 @@ padding-bottom:6px;
 
 .daysRow{
 display:grid;
-grid-template-columns:repeat(31, 22px);
 gap:6px;
 overflow-x:auto;
 padding-bottom:6px;
