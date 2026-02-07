@@ -18,6 +18,11 @@
 <button class="ghost" onclick="logout()">Logout</button>
 </div>
 
+<div class="card">
+  <button onclick="setView('month')">Month</button>
+  <button onclick="setView('week')">Week</button>
+  <select id="monthSelect" onchange="changeMonth()"></select>
+</div>
 <!-- HABITS -->
 <div class="card">
 <h3>Your Habits</h3>
