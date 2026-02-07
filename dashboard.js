@@ -1,4 +1,6 @@
-// ===== GLOBAL STATE =====
+/* =========================
+   GLOBAL STATE
+========================= */
 
 let habits = [];
 let userId = null;
@@ -16,7 +18,10 @@ let selectedYear = todayYear;
 
 let viewMode = "month";
 
-// ===== AUTH =====
+
+/* =========================
+   AUTH
+========================= */
 
 auth.onAuthStateChanged(user => {
   if (!user) {
@@ -28,149 +33,142 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-// ===== VIEW MODE =====
+
+/* =========================
+   VIEW MODE
+========================= */
 
 function setView(mode){
   viewMode = mode;
   render();
 }
 
-// ===== MONTH SELECTOR =====
 
-function setupMonthSelector() {
+/* =========================
+   MONTH SELECTOR
+========================= */
+
+function setupMonthSelector(){
   const select = document.getElementById("monthSelect");
   select.innerHTML = "";
 
-  for (let m = 0; m < 12; m++) {
+  for(let m=0;m<12;m++){
     let option = document.createElement("option");
     option.value = m;
-    option.text = new Date(0, m).toLocaleString('default', { month: 'long' });
+    option.text = new Date(2024,m,1)
+      .toLocaleString("default",{month:"long"});
 
-    if (m === selectedMonth) option.selected = true;
+    if(m===selectedMonth) option.selected=true;
+
     select.appendChild(option);
   }
 
-  select.onchange = () => {
+  select.onchange = ()=>{
     selectedMonth = Number(select.value);
     loadHabits();
   };
 }
 
-// ===== DATE HELPERS =====
 
-function daysInMonth(month, year) {
-  return new Date(year, month + 1, 0).getDate();
+/* =========================
+   DATE HELPERS
+========================= */
+
+function daysInMonth(month,year){
+  return new Date(year, month+1, 0).getDate();
 }
 
-function getMonthKey() {
-  return `${selectedYear}-${selectedMonth}`;
+function getMonthKey(){
+  return selectedYear + "-" + selectedMonth;
 }
 
-// ===== ADD HABIT =====
+function isFutureDate(dayNumber){
+  if(selectedYear > todayYear) return true;
+  if(selectedYear < todayYear) return false;
 
-function addHabit() {
+  if(selectedMonth > todayMonth) return true;
+  if(selectedMonth < todayMonth) return false;
+
+  return dayNumber > todayDate;
+}
+
+
+/* =========================
+   ADD HABIT
+========================= */
+
+function addHabit(){
 
   let input = document.getElementById("habitInput");
   let name = input.value.trim();
-  if (!name) return;
+  if(!name) return;
 
   let daysCount = daysInMonth(selectedMonth, selectedYear);
 
   habits.push({
     name,
-    months: {
+    months:{
       [getMonthKey()]: Array(daysCount).fill(false)
     }
   });
 
-  input.value = "";
+  input.value="";
   saveHabits();
   render();
 }
 
-// ===== RENDER UI =====
+
+/* =========================
+   RENDER UI
+========================= */
 
 function render(){
 
-  const list=document.getElementById("habitList");
+  renderDateHeader();
+
+  const list = document.getElementById("habitList");
   list.innerHTML="";
 
-  const key=getMonthKey();
-  const daysCount=daysInMonth(selectedMonth,selectedYear);
-  
-  // ⭐ DYNAMIC GRID HEADER FIX
-  document.getElementById("dateHeader").style.gridTemplateColumns =
-    `repeat(${daysCount}, 22px)`;
+  const key = getMonthKey();
+  const daysCount = daysInMonth(selectedMonth, selectedYear);
 
   habits.forEach((habit,hIndex)=>{
 
     if(!habit.months) habit.months={};
-    if(!habit.months[key]) habit.months[key]=Array(daysCount).fill(false);
+    if(!habit.months[key])
+      habit.months[key]=Array(daysCount).fill(false);
 
-    let row=document.createElement("div");
+    let row = document.createElement("div");
     row.className="habitRow";
 
-    let title=document.createElement("div");
+    let title = document.createElement("div");
     title.className="habitTitle";
-    title.innerText=habit.name;
+    title.innerText = habit.name;
 
-    let daysRow=document.createElement("div");
+    let daysRow = document.createElement("div");
     daysRow.className="daysRow";
 
-    // ⭐ DATE HEADER FIX ADD HERE
-  const header = document.getElementById("dateHeader");
-  header.innerHTML = "";
+    habit.months[key].forEach((done,dIndex)=>{
 
-  header.style.gridTemplateColumns =
-    `repeat(${daysCount}, 22px)`;
+      let dayNumber = dIndex + 1;
 
-  for(let d=1; d<=daysCount; d++){
-    let el = document.createElement("span");
-    el.className = "dateCell";
-    el.innerText = d;
-    header.appendChild(el);
-  }
-
-    // ⭐ DYNAMIC GRID PER ROW FIX
-    daysRow.style.gridTemplateColumns =
-      `repeat(${daysCount}, 22px)`;
-
-    let startDay=0;
-    let endDay=daysCount;
-
-    if(viewMode==="week"){
-      let week=Math.ceil(todayDate/7);
-      startDay=(week-1)*7;
-      endDay=startDay+7;
-    }
-
-    habit.months[key]
-    .slice(startDay,endDay)
-    .forEach((done,dIndex)=>{
-
-      let realIndex=startDay+dIndex;
-      let dayNumber=realIndex+1;
-
-      let box=document.createElement("span");
+      let box = document.createElement("span");
       box.className="dayBox";
 
       if(done) box.classList.add("done");
 
-      if(dayNumber===todayDate &&
+      if(
+        dayNumber===todayDate &&
         selectedMonth===todayMonth &&
-        selectedYear===todayYear){
+        selectedYear===todayYear
+      ){
         box.classList.add("today");
       }
 
-      // ⭐ FUTURE DISABLE FIX
-      let isCurrentMonth =
-        selectedMonth === todayMonth &&
-        selectedYear === todayYear;
-
-      if(isCurrentMonth && dayNumber > todayDate){
+      if(isFutureDate(dayNumber)){
         box.classList.add("disabled");
       }else{
-        box.onclick=()=>toggleDay(hIndex,realIndex);
+        box.onclick = ()=> toggleDay(hIndex,dIndex);
       }
 
       daysRow.appendChild(box);
@@ -185,10 +183,32 @@ function render(){
   updateAnalytics();
 }
 
-// ===== TOGGLE DAY =====
+
+/* =========================
+   DATE HEADER ROW
+========================= */
+
+function renderDateHeader(){
+
+  const header = document.getElementById("dateHeader");
+  header.innerHTML="";
+
+  let daysCount = daysInMonth(selectedMonth, selectedYear);
+
+  for(let d=1; d<=daysCount; d++){
+    let el = document.createElement("span");
+    el.className="dateNumber";
+    el.innerText=d;
+    header.appendChild(el);
+  }
+}
+
+
+/* =========================
+   TOGGLE DAY
+========================= */
 
 function toggleDay(hIndex,dIndex){
-
   let key=getMonthKey();
 
   habits[hIndex].months[key][dIndex] =
@@ -198,56 +218,62 @@ function toggleDay(hIndex,dIndex){
   render();
 }
 
-// ===== ANALYTICS =====
 
-function updateAnalytics() {
+/* =========================
+   ANALYTICS
+========================= */
 
-  const key = getMonthKey();
+function updateAnalytics(){
 
-  let totalHabits = habits.length;
-  let totalDays = 0;
-  let doneDays = 0;
+  const key=getMonthKey();
 
-  let dayTotals = [];
-  let daysCount = daysInMonth(selectedMonth, selectedYear);
+  let totalHabits=habits.length;
+  let totalDays=0;
+  let doneDays=0;
 
-  for (let i = 0; i < daysCount; i++) dayTotals[i] = 0;
+  let dayTotals=[];
+  let daysCount=daysInMonth(selectedMonth,selectedYear);
 
-  habits.forEach(h => {
-    if (!h.months || !h.months[key]) return;
+  for(let i=0;i<daysCount;i++) dayTotals[i]=0;
 
-    h.months[key].forEach((d, i) => {
+  habits.forEach(h=>{
+    if(!h.months || !h.months[key]) return;
+
+    h.months[key].forEach((d,i)=>{
       totalDays++;
-      if (d) {
+      if(d){
         doneDays++;
         dayTotals[i]++;
       }
     });
   });
 
-  let completion =
-    totalDays === 0 ? 0 :
-    Math.round(doneDays / totalDays * 100);
+  let completion = totalDays===0
+    ? 0
+    : Math.round(doneDays/totalDays*100);
 
-  document.getElementById("totalHabits").innerText = totalHabits;
-  document.getElementById("completion").innerText = completion + "%";
+  document.getElementById("totalHabits").innerText=totalHabits;
+  document.getElementById("completion").innerText=completion+"%";
 
   calculateStreak(key);
-  drawPie(doneDays, totalDays - doneDays);
+  drawPie(doneDays,totalDays-doneDays);
   drawProgress(dayTotals);
 }
 
-// ===== STREAK =====
 
-function calculateStreak(key) {
+/* =========================
+   STREAK
+========================= */
 
-  let current = 0;
-  let best = 0;
-  let streak = 0;
+function calculateStreak(key){
 
-  let daysCount = daysInMonth(selectedMonth, selectedYear);
+  let current=0;
+  let best=0;
+  let streak=0;
 
-  for (let d = 0; d < daysCount; d++) {
+  let daysCount=daysInMonth(selectedMonth,selectedYear);
+
+  for(let d=0; d<daysCount; d++){
 
     let allDone = habits.every(h =>
       h.months &&
@@ -255,84 +281,93 @@ function calculateStreak(key) {
       h.months[key][d]
     );
 
-    if (allDone) {
+    if(allDone){
       streak++;
-      best = Math.max(best, streak);
-    } else {
-      streak = 0;
+      best=Math.max(best,streak);
+    }else{
+      streak=0;
     }
 
-    if (d === todayDate - 1) current = streak;
+    if(d===todayDate-1) current=streak;
   }
 
-  document.getElementById("streak").innerText = current;
-  document.getElementById("bestStreak").innerText = best;
+  document.getElementById("streak").innerText=current;
+  document.getElementById("bestStreak").innerText=best;
 }
 
-// ===== PIE CHART =====
 
-function drawPie(done, remaining) {
+/* =========================
+   CHARTS
+========================= */
 
-  let ctx = document.getElementById("pieChart").getContext("2d");
+function drawPie(done,remaining){
 
-  if (pieChart) pieChart.destroy();
+  let ctx=document.getElementById("pieChart").getContext("2d");
 
-  pieChart = new Chart(ctx, {
-    type: "pie",
-    data: {
-      labels: ["Done", "Remaining"],
-      datasets: [{
-        data: [done, remaining]
-      }]
+  if(pieChart) pieChart.destroy();
+
+  pieChart=new Chart(ctx,{
+    type:"pie",
+    data:{
+      labels:["Done","Remaining"],
+      datasets:[{ data:[done,remaining] }]
     }
   });
 }
 
-// ===== PROGRESS CHART =====
+function drawProgress(dayTotals){
 
-function drawProgress(dayTotals) {
-
-  let weeks = ["W1","W2","W3","W4","W5"];
-  let weekly = [0,0,0,0,0];
+  let weeks=["W1","W2","W3","W4","W5"];
+  let weekly=[0,0,0,0,0];
 
   dayTotals.forEach((v,i)=>{
     weekly[Math.floor(i/7)] += v;
   });
 
-  let ctx =
-    document.getElementById("progressChart").getContext("2d");
+  let ctx=document.getElementById("progressChart").getContext("2d");
 
-  if (progressChart) progressChart.destroy();
+  if(progressChart) progressChart.destroy();
 
-  progressChart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: weeks,
-      datasets: [{
-        label: "Progress",
-        data: weekly
+  progressChart=new Chart(ctx,{
+    type:"line",
+    data:{
+      labels:weeks,
+      datasets:[{
+        label:"Progress",
+        data:weekly
       }]
     }
   });
 }
 
-// ===== FIREBASE SAVE =====
 
-function saveHabits() {
-  db.collection("habits").doc(userId).set({ habits });
+/* =========================
+   FIREBASE
+========================= */
+
+function saveHabits(){
+  db.collection("habits")
+    .doc(userId)
+    .set({habits});
 }
 
-// ===== FIREBASE LOAD =====
-
-function loadHabits() {
-  db.collection("habits").doc(userId).get().then(doc => {
-    habits = doc.exists ? doc.data().habits || [] : [];
-    render();
-  });
+function loadHabits(){
+  db.collection("habits")
+    .doc(userId)
+    .get()
+    .then(doc=>{
+      habits = doc.exists
+        ? doc.data().habits || []
+        : [];
+      render();
+    });
 }
 
-// ===== LOGOUT =====
 
-function logout() {
+/* =========================
+   LOGOUT
+========================= */
+
+function logout(){
   auth.signOut();
 }
