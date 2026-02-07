@@ -153,11 +153,37 @@ font-size:14px;
 }
 
 #dateHeader{
-margin-left:90px;
+display:grid;
+grid-template-columns:repeat(31, 22px);
+gap:6px;
+margin-left:120px;
+margin-bottom:12px;
+overflow-x:auto;
+padding-bottom:6px;
+}
+
+.daysRow{
+display:grid;
+grid-template-columns:repeat(31, 22px);
+gap:6px;
+overflow-x:auto;
+padding-bottom:6px;
 }
 
 .chartsRow{
-grid-template-columns:1fr;
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:30px;
+align-items:center;
+margin-top:25px;
 }
 
+.chartsRow canvas{
+width:100%;
+max-width:380px;
+margin:auto;
+background:rgba(255,255,255,0.02);
+padding:12px;
+border-radius:16px;
+}
 }
