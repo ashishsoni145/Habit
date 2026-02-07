@@ -3,7 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>Habit Tracker</title>
+
 <link rel="stylesheet" href="dashboard.css">
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -12,63 +17,36 @@
 
 <h1>Habit Tracker</h1>
 
-<div class="topbar">
+<div class="topBar">
 <input id="habitInput" placeholder="New Habit">
 <button onclick="addHabit()">Add</button>
-<button class="ghost" onclick="logout()">Logout</button>
+<button onclick="logout()">Logout</button>
 </div>
 
-<div class="card">
-  <button onclick="setView('month')">Month</button>
-  <button onclick="setView('week')">Week</button>
-  <select id="monthSelect" onchange="changeMonth()"></select>
+<div class="controls">
+<button onclick="setView('month')">Month</button>
+<button onclick="setView('week')">Week</button>
+
+<select id="monthSelect"></select>
 </div>
-<!-- HABITS -->
+
 <div class="card">
 <h3>Your Habits</h3>
 <div id="habitList"></div>
 </div>
 
-<!-- STATS -->
-<div class="statsRow">
-
-<div class="statBox">
-<span>Total</span>
-<h2 id="totalHabits">0</h2>
-</div>
-
-<div class="statBox">
-<span>Completion</span>
-<h2 id="completionPercent">0%</h2>
-</div>
-
-</div>
-<div class="statsRow">
-  <div>Total: <span id="totalHabits">0</span></div>
-  <div>Completion: <span id="completion">0%</span></div>
-  <div>🔥 Streak: <span id="streak">0</span></div>
-  <div>🏆 Best: <span id="bestStreak">0</span></div>
+<div class="stats">
+<div>Total: <span id="totalHabits">0</span></div>
+<div>Completion: <span id="completion">0%</span></div>
+<div>🔥 Streak: <span id="streak">0</span></div>
+<div>🏆 Best: <span id="bestStreak">0</span></div>
 </div>
 
 <canvas id="pieChart"></canvas>
 <canvas id="progressChart"></canvas>
-<!-- PIE -->
-<div class="card">
-<canvas id="pieChart"></canvas>
-</div>
-
-<!-- LINE -->
-<div class="card">
-<canvas id="lineChart"></canvas>
-</div>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script src="firebase.js"></script>
 <script src="dashboard.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </body>
 </html>
