@@ -1,113 +1,91 @@
 body{
-  font-family: Inter, sans-serif;
-  margin:0;
-  background: linear-gradient(120deg,#f6f8fb,#e9eef5);
-  transition:0.3s;
+font-family:sans-serif;
+background:#0f172a;
+color:white;
+padding:20px;
 }
 
-/* DARK MODE AUTO */
-@media (prefers-color-scheme: dark){
-  body{
-    background: linear-gradient(120deg,#0f172a,#020617);
-    color:white;
-  }
+.topBar input{
+padding:8px;
+border-radius:8px;
+border:none;
+margin-right:10px;
 }
 
-.container{
-  padding:20px;
-}
-
-/* GLASS CARD */
-.card{
-  background: rgba(255,255,255,0.6);
-  backdrop-filter: blur(20px);
-  border-radius:18px;
-  padding:20px;
-  box-shadow:0 10px 40px rgba(0,0,0,0.1);
-  margin-bottom:20px;
-}
-
-@media (prefers-color-scheme: dark){
-  .card{
-    background: rgba(255,255,255,0.05);
-  }
-}
-
-/* BUTTONS */
 button{
-  border:none;
-  padding:10px 18px;
-  border-radius:10px;
-  background:#111;
-  color:white;
-  cursor:pointer;
-  transition:0.25s;
+padding:8px 14px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+margin-right:5px;
 }
 
-button:hover{
-  transform:translateY(-2px);
-  box-shadow:0 8px 20px rgba(0,0,0,0.2);
+.controls{
+margin-top:15px;
 }
 
-/* HABIT ROW */
+.card{
+background:rgba(255,255,255,0.05);
+padding:20px;
+margin-top:20px;
+border-radius:16px;
+}
+
 .habitRow{
-  display:flex;
-  align-items:center;
-  gap:15px;
-  margin-bottom:14px;
+display:flex;
+align-items:center;
+margin-bottom:10px;
 }
 
 .habitTitle{
-  min-width:120px;
-  font-weight:600;
+width:120px;
 }
 
-/* DAY BOXES */
 .daysRow{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
+display:flex;
+flex-wrap:wrap;
+gap:5px;
 }
 
 .dayBox{
-  width:22px;
-  height:22px;
-  border-radius:6px;
-  background:#e5e7eb;
-  cursor:pointer;
-  transition:0.25s;
-}
-
-.dayBox:hover{
-  transform:scale(1.15);
+width:18px;
+height:18px;
+border-radius:6px;
+background:#e5e7eb;
+cursor:pointer;
+transition:0.2s;
 }
 
 .dayBox.done{
-  background:#22c55e;
-  animation: pop 0.25s ease;
+background:#4ade80;
+transform:scale(1.1);
 }
 
 .dayBox.today{
-  border:2px solid black;
+border:2px solid #22c55e;
 }
 
 .dayBox.disabled{
-  background:#ccc;
-  cursor:not-allowed;
+opacity:0.3;
+pointer-events:none;
 }
 
-@keyframes pop{
-  0%{transform:scale(0.6)}
-  100%{transform:scale(1)}
+.stats{
+margin-top:20px;
 }
 
-/* CHART SIZE */
+canvas{
+margin-top:30px;
+background:white;
+border-radius:12px;
+padding:10px;
+max-width:500px;
+}
+
 #pieChart{
-  max-width:320px;
-  margin:auto;
+height:250px !important;
 }
 
 #progressChart{
-  max-width:600px;
-  margin:auto;
+height:250px !important;
 }
