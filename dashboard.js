@@ -97,20 +97,7 @@ function render(){
 
   const key=getMonthKey();
   const daysCount=daysInMonth(selectedMonth,selectedYear);
-  // ⭐ DATE HEADER FIX ADD HERE
-  const header = document.getElementById("dateHeader");
-  header.innerHTML = "";
-
-  header.style.gridTemplateColumns =
-    `repeat(${daysCount}, 22px)`;
-
-  for(let d=1; d<=daysCount; d++){
-    let el = document.createElement("span");
-    el.className = "dateCell";
-    el.innerText = d;
-    header.appendChild(el);
-  }
-
+  
   // ⭐ DYNAMIC GRID HEADER FIX
   document.getElementById("dateHeader").style.gridTemplateColumns =
     `repeat(${daysCount}, 22px)`;
@@ -129,6 +116,20 @@ function render(){
 
     let daysRow=document.createElement("div");
     daysRow.className="daysRow";
+
+    // ⭐ DATE HEADER FIX ADD HERE
+  const header = document.getElementById("dateHeader");
+  header.innerHTML = "";
+
+  header.style.gridTemplateColumns =
+    `repeat(${daysCount}, 22px)`;
+
+  for(let d=1; d<=daysCount; d++){
+    let el = document.createElement("span");
+    el.className = "dateCell";
+    el.innerText = d;
+    header.appendChild(el);
+  }
 
     // ⭐ DYNAMIC GRID PER ROW FIX
     daysRow.style.gridTemplateColumns =
