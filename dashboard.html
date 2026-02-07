@@ -3,17 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <title>Habit Tracker</title>
-
 <link rel="stylesheet" href="dashboard.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="firebase.js"></script>
 </head>
 
 <body>
+
+<div class="container">
 
 <h1>Habit Tracker</h1>
 
@@ -32,6 +35,7 @@
 
 <div class="card">
 <h3>Your Habits</h3>
+<div id="dateHeader"></div>
 <div id="habitList"></div>
 </div>
 
@@ -42,10 +46,13 @@
 <div>🏆 Best: <span id="bestStreak">0</span></div>
 </div>
 
+<div class="chartsRow">
 <canvas id="pieChart"></canvas>
 <canvas id="progressChart"></canvas>
+</div>
 
-<script src="firebase.js"></script>
+</div>
+
 <script src="dashboard.js"></script>
 
 </body>
