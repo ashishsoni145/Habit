@@ -1,193 +1,261 @@
-let habits=[];
-let userId=null;
+let habits = [];
+let userId = null;
 
-const DAYS=30;
-const today=new Date().getDate()-1;
+let pieChart = null;
+let progressChart = null;
 
-auth.onAuthStateChanged(user=>{
+let selectedMonth = new Date().getMonth();
+let selectedYear = new Date().getFullYear();
 
-if(!user){
-window.location="index.html";
-return;
-}
+const today = new Date();
+const todayDate = today.getDate();
+const todayMonth = today.getMonth();
+const todayYear = today.getFullYear();
 
-userId=user.uid;
-loadHabits();
-
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    window.location = "login.html";
+  } else {
+    userId = user.uid;
+    setupMonthSelector();
+    loadHabits();
+  }
 });
 
-async function addHabit(){
+function setupMonthSelector() {
+  const select = document.getElementById("monthSelect");
+  select.innerHTML = "";
 
-let name=document.getElementById("habitInput").value.trim();
-if(!name) return;
+  for (let m = 0; m < 12; m++) {
+    let option = document.createElement("option");
+    option.value = m;
+    option.text = new Date(0, m).toLocaleString('default', { month: 'long' });
 
-let habit={
-name,
-days:Array(DAYS).fill(false)
-};
+    if (m === selectedMonth) option.selected = true;
 
-await db.collection("users")
-.doc(userId)
-.collection("habits")
-.add(habit);
+    select.appendChild(option);
+  }
 
-document.getElementById("habitInput").value="";
-loadHabits();
-
+  select.onchange = () => {
+    selectedMonth = Number(select.value);
+    loadHabits();
+  };
 }
 
-async function loadHabits(){
-
-let snap=await db.collection("users")
-.doc(userId)
-.collection("habits")
-.get();
-
-habits=[];
-
-snap.forEach(doc=>{
-habits.push({id:doc.id,...doc.data()});
-});
-
-render();
-
+function daysInMonth(month, year) {
+  return new Date(year, month + 1, 0).getDate();
 }
 
-async function toggleDay(id,day){
-
-let h=habits.find(x=>x.id===id);
-h.days[day]=!h.days[day];
-
-await db.collection("users")
-.doc(userId)
-.collection("habits")
-.doc(id)
-.update(h);
-
-render();
-
+function getMonthKey() {
+  return `${selectedYear}-${selectedMonth}`;
 }
 
-function render(){
+function addHabit() {
+  let input = document.getElementById("habitInput");
+  let name = input.value.trim();
+  if (!name) return;
 
-let list=document.getElementById("habitList");
-list.innerHTML="";
+  let daysCount = daysInMonth(selectedMonth, selectedYear);
 
-habits.forEach(h=>{
+  habits.push({
+    name,
+    months: {
+      [getMonthKey()]: Array(daysCount).fill(false)
+    }
+  });
 
-let row=document.createElement("div");
-row.className="habitRow";
-
-let name=document.createElement("div");
-name.className="habitName";
-name.innerText=h.name;
-
-let ticks=document.createElement("div");
-ticks.className="ticksRow";
-
-h.days.forEach((d,i)=>{
-
-let t=document.createElement("span");
-t.className="tick";
-
-if(d) t.classList.add("active");
-if(i===today) t.classList.add("today");
-
-t.onclick=()=>toggleDay(h.id,i);
-
-ticks.appendChild(t);
-
-});
-
-row.appendChild(name);
-row.appendChild(ticks);
-list.appendChild(row);
-
-});
-
-updateStats();
-drawCharts();
-
+  input.value = "";
+  saveHabits();
+  render();
 }
 
-function updateStats(){
+function render() {
+  const list = document.getElementById("habitList");
+  list.innerHTML = "";
 
-let total=habits.length;
-let done=0;
-let all=0;
+  const daysCount = daysInMonth(selectedMonth, selectedYear);
+  const key = getMonthKey();
 
-habits.forEach(h=>{
-h.days.forEach(d=>{
-all++;
-if(d) done++;
-});
-});
+  habits.forEach((habit, hIndex) => {
 
-let percent=all?Math.round(done/all*100):0;
+    if (!habit.months) habit.months = {};
+    if (!habit.months[key]) habit.months[key] = Array(daysCount).fill(false);
 
-document.getElementById("totalHabits").innerText=total;
-document.getElementById("completionPercent").innerText=percent+"%";
+    let row = document.createElement("div");
+    row.className = "habitRow";
 
+    let title = document.createElement("div");
+    title.className = "habitTitle";
+    title.innerText = habit.name;
+
+    let daysRow = document.createElement("div");
+    daysRow.className = "daysRow";
+
+    habit.months[key].forEach((done, dIndex) => {
+
+      let dayNumber = dIndex + 1;
+      let box = document.createElement("span");
+      box.className = "dayBox";
+
+      if (done) box.classList.add("done");
+
+      if (
+        dayNumber === todayDate &&
+        selectedMonth === todayMonth &&
+        selectedYear === todayYear
+      ) box.classList.add("today");
+
+      if (
+        selectedYear > todayYear ||
+        (selectedYear === todayYear && selectedMonth > todayMonth) ||
+        (selectedYear === todayYear &&
+          selectedMonth === todayMonth &&
+          dayNumber > todayDate)
+      ) {
+        box.classList.add("disabled");
+      } else {
+        box.onclick = () => toggleDay(hIndex, dIndex);
+      }
+
+      daysRow.appendChild(box);
+    });
+
+    row.appendChild(title);
+    row.appendChild(daysRow);
+    list.appendChild(row);
+  });
+
+  updateAnalytics();
 }
 
-let pieChart,lineChart;
+function toggleDay(hIndex, dIndex) {
+  const key = getMonthKey();
+  habits[hIndex].months[key][dIndex] =
+    !habits[hIndex].months[key][dIndex];
 
-function drawCharts(){
-
-let done=0,total=0;
-
-habits.forEach(h=>{
-h.days.forEach(d=>{
-total++;
-if(d) done++;
-});
-});
-
-let remain=total-done;
-
-let pie=document.getElementById("pieChart");
-if(pie){
-
-if(pieChart) pieChart.destroy();
-
-pieChart=new Chart(pie,{
-type:"pie",
-data:{
-labels:["Done","Remaining"],
-datasets:[{
-data:[done,remain],
-backgroundColor:["#22c55e","#e5e7eb"]
-}]
-}
-});
+  saveHabits();
+  render();
 }
 
-let line=document.getElementById("lineChart");
-if(line){
+function updateAnalytics() {
 
-if(lineChart) lineChart.destroy();
+  const key = getMonthKey();
 
-lineChart=new Chart(line,{
-type:"line",
-data:{
-labels:["W1","W2","W3","W4"],
-datasets:[{
-label:"Progress",
-data:[
-Math.random()*100,
-Math.random()*100,
-Math.random()*100,
-Math.random()*100
-],
-borderColor:"#22c55e",
-fill:false
-}]
+  let totalHabits = habits.length;
+  let totalDays = 0;
+  let doneDays = 0;
+
+  let dayTotals = [];
+  let daysCount = daysInMonth(selectedMonth, selectedYear);
+
+  for (let i = 0; i < daysCount; i++) dayTotals[i] = 0;
+
+  habits.forEach(h => {
+    if (!h.months || !h.months[key]) return;
+
+    h.months[key].forEach((d, i) => {
+      totalDays++;
+      if (d) {
+        doneDays++;
+        dayTotals[i]++;
+      }
+    });
+  });
+
+  let completion = totalDays === 0 ? 0 : Math.round(doneDays / totalDays * 100);
+
+  document.getElementById("totalHabits").innerText = totalHabits;
+  document.getElementById("completion").innerText = completion + "%";
+
+  calculateStreak(key);
+  drawPie(doneDays, totalDays - doneDays);
+  drawProgress(dayTotals);
 }
-});
+
+function calculateStreak(key) {
+
+  let current = 0;
+  let best = 0;
+
+  let streak = 0;
+
+  let daysCount = daysInMonth(selectedMonth, selectedYear);
+
+  for (let d = 0; d < daysCount; d++) {
+
+    let allDone = habits.every(h =>
+      h.months &&
+      h.months[key] &&
+      h.months[key][d]
+    );
+
+    if (allDone) {
+      streak++;
+      best = Math.max(best, streak);
+    } else {
+      streak = 0;
+    }
+
+    if (d === todayDate - 1) current = streak;
+  }
+
+  document.getElementById("streak").innerText = current;
+  document.getElementById("bestStreak").innerText = best;
 }
 
+function drawPie(done, remaining) {
+
+  let ctx = document.getElementById("pieChart").getContext("2d");
+
+  if (pieChart) pieChart.destroy();
+
+  pieChart = new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: ["Done", "Remaining"],
+      datasets: [{
+        data: [done, remaining]
+      }]
+    }
+  });
 }
 
-function logout(){
-auth.signOut();
+function drawProgress(dayTotals) {
+
+  let weeks = ["W1","W2","W3","W4","W5"];
+  let weekly = [0,0,0,0,0];
+
+  dayTotals.forEach((v,i)=>{
+    weekly[Math.floor(i/7)] += v;
+  });
+
+  let ctx = document.getElementById("progressChart").getContext("2d");
+
+  if (progressChart) progressChart.destroy();
+
+  progressChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: weeks,
+      datasets: [{
+        label: "Progress",
+        data: weekly
+      }]
+    }
+  });
+}
+
+function saveHabits() {
+  db.collection("habits").doc(userId).set({ habits });
+}
+
+function loadHabits() {
+  db.collection("habits").doc(userId).get().then(doc => {
+    habits = doc.exists ? doc.data().habits || [] : [];
+    render();
+  });
+}
+
+function logout() {
+  auth.signOut();
 }
