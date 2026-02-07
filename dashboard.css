@@ -143,17 +143,6 @@ width:100%;
 max-width:420px;
 margin:auto;
 }
-.dateHeader{
-  display:grid;
-  gap:6px;
-  margin-bottom:8px;
-}
-
-.dateCell{
-  font-size:10px;
-  text-align:center;
-  opacity:0.7;
-}
 /* ⭐ MOBILE RESPONSIVE */
 @media(max-width:768px){
 
@@ -171,6 +160,17 @@ overflow-x:auto;
 padding-bottom:6px;
 }
 
+.dateHeader{
+  display:grid;
+  gap:6px;
+  margin-bottom:8px;
+}
+
+.dateCell{
+  font-size:10px;
+  text-align:center;
+  opacity:0.7;
+}
 .daysRow{
 display:grid;
 gap:6px;
